@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enhanced To-Do List with Dark Mode & More</title>
+  <style>
+    /* Root color variables */
+    :root {
+      --bg-light: #f9fafb;
+      --bg-dark: #121212;
+      --text-light: #121212;
+      --text-dark: #f0f0f0;
+      --primary-color: #a4a611;
+      --primary-hover: #8c8498;
+      --task-bg-light: #ffffff;
+      --task-bg-dark: #222;
+      --border-light: #ddd;
+      --border-dark: #444;
+      --accent-color: #a6e4de;
+      --error-color: #c95454;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-family);
+      color: var(--text-light);
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center; /* Center vertically */
+      background-image: url('https://png.pngtree.com/png-vector/20240801/ourmid/pngtree-vector-education-school-study-design-student-book-png-image_13118099.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-color 0.3s, color 0.3s;
+      user-select: none;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0,0,0,0.3); /* subtle dark overlay */
+      pointer-events: none;
+      z-index: 0;
+      transition: background-color 0.3s;
+    }
+
+    body.dark {
+      color: var(--text-dark);
+    }
+
+    body.dark::before {
+      background-color: rgba(0,0,0,0.6);
+    }
+
+    /* Container styling */
+    .container {
+      position: relative;
+      z-index: 1;
+      background-color: var(--task-bg-light);
+      padding: 2rem 2.5rem 3rem;
+      border-radius: 12px;
+      width: 360px;
+      max-width: 95vw;
+      box-shadow:
+        0 10px 20px rgba(0,0,0,0.12),
+        0 6px 6px rgba(0,0,0,0.08);
+      transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    body.dark .container {
+      background-color: var(--task-bg-dark);
+      box-shadow:
+        0 10px 20px rgba(255,255,255,0.1),
+        0 6px 6px rgba(255,255,255,0.06);
+    }
+
+    /* Header */
+    h1 {
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+      user-select: text;
+    }
+
+    /* Icon banner container */
+    .icon-banner {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      user-select: none;
+    }
+    .icon-banner svg, .icon-banner .emoji-icon {
+      width: 28px;
+      height: 28px;
+      fill: var(--primary-color);
+      transition: fill 0.3s;
+    }
+    body.dark .icon-banner svg, body.dark .icon-banner .emoji-icon {
+      fill: var(--accent-color);
+    }
+
+    /* Toggle mode button */
+    .toggle-mode {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .toggle-mode button {
+      background-color: transparent;
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+      padding: 0.4rem 1.25rem;
+      border-radius: 24px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    .toggle-mode button:hover {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    /* Input section */
+    .input-section {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 0.65rem 1rem;
+      font-size: 1rem;
+      border-radius: 30px;
+      border: 2px solid var(--border-light);
+      transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+      outline-offset: 2px;
+      user-select: text;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 8px var(--primary-color);
+      background-color: var(--task-bg-light);
+    }
+
+    body.dark input[type="text"] {
+      background-color: #444;
+      border-color: var(--border-dark);
+      color: var(--text-dark);
+    }
+
+    body.dark input[type="text"]:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 8px var(--accent-color);
+      background-color: #555;
+      color: var(--text-dark);
+    }
+
+    /* Add button */
+    button#add-btn {
+      background-color: var(--primary-color);
+      border: none;
+      color: white;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0 1.5rem;
+      transition: background-color 0.3s, box-shadow 0.3s;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button#add-btn:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+      box-shadow: 0 0 12px var(--primary-hover);
+    }
+
+    button#add-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Filter buttons container */
+    .filter-section {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      user-select: none;
+    }
+    .filter-btn {
+      background-color: transparent;
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+      padding: 0.3rem 0.9rem;
+      border-radius: 24px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    .filter-btn:hover {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 0 8px var(--primary-color);
+    }
+    .filter-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+      box-shadow: 0 0 8px var(--primary-color);
+      cursor: default;
+    }
+    body.dark .filter-btn {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+    body.dark .filter-btn.active {
+      background-color: var(--accent-color);
+      color: var(--bg-dark);
+      box-shadow: 0 0 8px var(--accent-color);
+    }
+
+    /* Task list */
+    ul#task-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      max-height: 360px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) transparent;
+      user-select: none;
+      min-height: 60px;
+    }
+
+    ul#task-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ul#task-list::-webkit-scrollbar-thumb {
+      background-color: var(--primary-color);
+      border-radius: 3px;
+    }
+
+    ul#task-list li {
+      background-color: var(--task-bg-light);
+      border: 1.8px solid var(--border-light);
+      padding: 0.7rem 1rem;
+      margin-bottom: 0.7rem;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      transition: background-color 0.3s, border-color 0.3s, opacity 0.3s;
+      cursor: grab;
+    }
+
+    body.dark ul#task-list li {
+      background-color: #333;
+      border-color: var(--border-dark);
+      color: var(--text-dark);
+    }
+
+    ul#task-list li.completed {
+      text-decoration: line-through;
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    /* Dragging styles */
+    ul#task-list li.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+      box-shadow: 0 0 15px var(--primary-color);
+    }
+
+    /* Task text */
+    .task-text {
+      flex-grow: 1;
+      cursor: pointer;
+      font-size: 1rem;
+      user-select: text;
+      outline: none;
+    }
+
+    .task-text[contenteditable="true"] {
+      border-bottom: 2px solid var(--primary-color);
+      background-color: var(--task-bg-light);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    body.dark .task-text[contenteditable="true"] {
+      background-color: #555;
+    }
+
+    /* Buttons container */
+    .btn-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      user-select: none;
+    }
+
+    /* Delete button */
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--error-color);
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1.4rem;
+      line-height: 1;
+      transition: color 0.3s ease;
+      user-select: none;
+      padding: 0 6px;
+      border-radius: 4px;
+    }
+
+    .delete-btn:hover {
+      color: #b71c1c;
+    }
+
+    /* Edit button */
+    .edit-btn {
+      background: transparent;
+      border: none;
+      color: var(--primary-color);
+      cursor: pointer;
+      font-size: 1.4rem;
+      line-height: 1;
+      transition: color 0.3s ease;
+      user-select: none;
+      padding: 0 6px;
+      border-radius: 4px;
+    }
+
+    .edit-btn:hover {
+      color: var(--primary-hover);
+    }
+
+    /* Stats area */
+    .stats {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 0.9rem;
+      user-select: none;
+      color: var(--primary-color);
+    }
+
+    /* Clear completed button */
+    .clear-completed {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .clear-completed button {
+      background-color: var(--error-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 24px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    .clear-completed button:hover {
+      background-color: #b71c1c;
+      box-shadow: 0 0 8px #b71c1c;
+    }
+
+    /* Clear all button */
+    .clear-all {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .clear-all button {
+      background-color: #999;
+      color: white;
+      border: none;
+      padding: 0.35rem 1.2rem;
+      border-radius: 24px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .clear-all button:hover {
+      background-color: #666;
+      box-shadow: 0 0 6px #666;
+    }
+
+    /* Mark all completed button */
+    .mark-all {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: center;
+    }
+    .mark-all button {
+      background-color: var(--accent-color);
+      color: var(--bg-dark);
+      border: none;
+      padding: 0.4rem 1.2rem;
+      border-radius: 24px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      transition: background-color 0.3s ease;
+      user-select: none;
+      box-shadow: 0 0 6px var(--accent-color);
+    }
+    .mark-all button:hover {
+      background-color: #00bfa5;
+      box-shadow: 0 0 10px #00bfa5;
+    }
+
+    /* Empty state message */
+    #empty-message {
+      text-align: center;
+      margin-top: 1rem;
+      color: var(--primary-color);
+      font-style: italic;
+      user-select: none;
+    }
+    body.dark #empty-message {
+      color: var(--accent-color);
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 400px) {
+      .container {
+        width: 95vw;
+        padding: 1.5rem 1.5rem 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main" aria-label="To-Do List Application">
+
+    <!-- Icon banner -->
+    <div class="icon-banner" aria-hidden="true" title="Icons: pen, book, laptop, pencil">
+      <!-- Pen icon SVG -->
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" >
+        <path d="M3 17.25V21h3.75l11.06-11.06-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+      </svg>
+      <!-- Book emoji as fallback -->
+      <span class="emoji-icon" role="img" aria-label="Book">📚</span>
+      <!-- Laptop icon SVG -->
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M20 18v-10c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v10H2v2h20v-2h-2zM6 8h12v8H6V8z"/>
+      </svg>
+      <!-- Pencil emoji -->
+      <span class="emoji-icon" role="img" aria-label="Pencil">✏️</span>
+    </div>
+
+    <h1>To-Do List</h1>
+
+    <div class="toggle-mode">
+      <button id="mode-toggle" aria-pressed="false" aria-label="Toggle dark/light mode">Switch to Dark Mode</button>
+    </div>
+
+    <div class="input-section">
+      <input
+        type="text"
+        id="task-input"
+        placeholder="Add a new task..."
+        aria-label="Task input"
+        autocomplete="off"
+      />
+      <button id="add-btn" aria-label="Add task" disabled>➕</button>
+    </div>
+
+    <div class="filter-section" role="radiogroup" aria-label="Filter tasks">
+      <button class="filter-btn active" data-filter="all" aria-checked="true" role="radio" tabindex="0">All</button>
+      <button class="filter-btn" data-filter="active" aria-checked="false" role="radio" tabindex="-1">Active</button>
+      <button class="filter-btn" data-filter="completed" aria-checked="false" role="radio" tabindex="-1">Completed</button>
+    </div>
+
+    <ul id="task-list" aria-live="polite" aria-label="List of tasks"></ul>
+
+    <div id="empty-message" aria-live="polite" style="display:none;">No tasks yet. Add something!</div>
+
+    <div class="stats" aria-live="polite" aria-atomic="true">
+      <div id="total-tasks">Total: 0</div>
+      <div id="completed-tasks">Completed: 0</div>
+    </div>
+
+    <div class="mark-all">
+      <button id="mark-all-btn" aria-label="Mark all tasks as completed" disabled>Mark All Completed ✔️</button>
+    </div>
+
+    <div class="clear-completed">
+      <button id="clear-completed-btn" aria-label="Clear completed tasks" disabled>Clear Completed</button>
+    </div>
+
+    <div class="clear-all">
+      <button id="clear-all-btn" aria-label="Clear all tasks" disabled>Clear All</button>
+    </div>
+
+  </div>
+
+  <script>
+    // DOM elements
+    const modeToggleBtn = document.getElementById('mode-toggle');
+    const body = document.body;
+    const taskInput = document.getElementById('task-input');
+    const addBtn = document.getElementById('add-btn');
+    const taskList = document.getElementById('task-list');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const totalTasksEl = document.getElementById('total-tasks');
+    const completedTasksEl = document.getElementById('completed-tasks');
+    const clearCompletedBtn = document.getElementById('clear-completed-btn');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+    const markAllBtn = document.getElementById('mark-all-btn');
+    const emptyMessage = document.getElementById('empty-message');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let filter = 'all';
+
+    // Initialize theme from localStorage or default light
+    if(localStorage.getItem('theme') === 'dark'){
+      body.classList.add('dark');
+      modeToggleBtn.textContent = 'Switch to Light Mode';
+      modeToggleBtn.setAttribute('aria-pressed', 'true');
+    }
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      let filteredTasks = tasks;
+      if (filter === 'active') {
+        filteredTasks = tasks.filter(task => !task.completed);
+      } else if (filter === 'completed') {
+        filteredTasks = tasks.filter(task => task.completed);
+      }
+
+      if(filteredTasks.length === 0) {
+        emptyMessage.style.display = 'block';
+      } else {
+        emptyMessage.style.display = 'none';
+      }
+
+      filteredTasks.forEach(task => {
+        const li = document.createElement('li');
+        li.setAttribute('draggable', 'true');
+        li.dataset.id = task.id;
+        li.classList.toggle('completed', task.completed);
+
+        // Task text, editable
+        const taskText = document.createElement('div');
+        taskText.className = 'task-text';
+        taskText.textContent = task.text;
+        taskText.setAttribute('tabindex', '0');
+        taskText.setAttribute('role', 'textbox');
+        taskText.setAttribute('aria-label', `Task: ${task.text}`);
+
+        // Double-click to edit
+        taskText.addEventListener('dblclick', () => {
+          taskText.contentEditable = 'true';
+          taskText.focus();
+        });
+
+        taskText.addEventListener('blur', () => {
+          taskText.contentEditable = 'false';
+          if(taskText.textContent.trim() === '') {
+            alert('Task cannot be empty!');
+            taskText.textContent = task.text;
+            return;
+          }
+          task.text = taskText.textContent.trim();
+          saveTasks();
+          updateStats();
+        });
+
+        // Toggle complete on click
+        taskText.addEventListener('click', () => {
+          task.completed = !task.completed;
+          saveTasks();
+          renderTasks();
+          updateStats();
+        });
+
+        li.appendChild(taskText);
+
+        // Buttons container
+        const btnGroup = document.createElement('div');
+        btnGroup.className = 'btn-group';
+
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.setAttribute('aria-label', `Delete task: ${task.text}`);
+        deleteBtn.textContent = '✖';
+        deleteBtn.addEventListener('click', () => {
+          tasks = tasks.filter(t => t.id !== task.id);
+          saveTasks();
+          renderTasks();
+          updateStats();
+        });
+
+        btnGroup.appendChild(deleteBtn);
+        li.appendChild(btnGroup);
+
+        taskList.appendChild(li);
+
+        // Drag & Drop handlers
+        li.addEventListener('dragstart', (e) => {
+          li.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', task.id);
+        });
+
+        li.addEventListener('dragend', () => {
+          li.classList.remove('dragging');
+          saveTasks();
+          renderTasks();
+          updateStats();
+        });
+
+        li.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          const draggingItem = document.querySelector('.dragging');
+          if(draggingItem === li) return;
+          const bounding = li.getBoundingClientRect();
+          const offset = e.clientY - bounding.top;
+          const after = offset > bounding.height / 2;
+
+          const draggingId = draggingItem.dataset.id;
+          const targetId = li.dataset.id;
+          const draggingIndex = tasks.findIndex(t => t.id == draggingId);
+          const targetIndex = tasks.findIndex(t => t.id == targetId);
+
+          if(after) {
+            tasks.splice(targetIndex + 1, 0, tasks.splice(draggingIndex, 1)[0]);
+          } else {
+            tasks.splice(targetIndex, 0, tasks.splice(draggingIndex, 1)[0]);
+          }
+          saveTasks();
+          renderTasks();
+          updateStats();
+        });
+      });
+
+      updateStats();
+      updateButtonsState();
+    }
+
+    function updateStats() {
+      totalTasksEl.textContent = `Total: ${tasks.length}`;
+      const completedCount = tasks.filter(t => t.completed).length;
+      completedTasksEl.textContent = `Completed: ${completedCount}`;
+    }
+
+    function updateButtonsState() {
+      clearCompletedBtn.disabled = !tasks.some(t => t.completed);
+      clearAllBtn.disabled = tasks.length === 0;
+      markAllBtn.disabled = tasks.length === 0 || tasks.every(t => t.completed);
+      addBtn.disabled = taskInput.value.trim() === '';
+    }
+
+    // Add task
+    addBtn.addEventListener('click', () => {
+      const text = taskInput.value.trim();
+      if(text === '') return;
+      tasks.push({ id: Date.now(), text, completed: false });
+      taskInput.value = '';
+      saveTasks();
+      renderTasks();
+      updateButtonsState();
+      taskInput.focus();
+    });
+
+    // Enable/disable add button based on input
+    taskInput.addEventListener('input', () => {
+      updateButtonsState();
+    });
+
+    // Enter key adds task
+    taskInput.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && !addBtn.disabled) {
+        addBtn.click();
+      }
+    });
+
+    // Filter buttons
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        filterButtons.forEach(btn => {
+          btn.classList.remove('active');
+          btn.setAttribute('aria-checked', 'false');
+          btn.tabIndex = -1;
+        });
+        button.classList.add('active');
+        button.setAttribute('aria-checked', 'true');
+        button.tabIndex = 0;
+        filter = button.dataset.filter;
+        renderTasks();
+      });
+    });
+
+    // Clear completed tasks
+    clearCompletedBtn.addEventListener('click', () => {
+      tasks = tasks.filter(t => !t.completed);
+      saveTasks();
+      renderTasks();
+    });
+
+    // Clear all tasks
+    clearAllBtn.addEventListener('click', () => {
+      if(confirm('Are you sure you want to clear all tasks?')) {
+        tasks = [];
+        saveTasks();
+        renderTasks();
+      }
+    });
+
+    // Mark all completed
+    markAllBtn.addEventListener('click', () => {
+      tasks = tasks.map(t => ({ ...t, completed: true }));
+      saveTasks();
+      renderTasks();
+    });
+
+    // Dark/Light mode toggle
+    modeToggleBtn.addEventListener('click', () => {
+      body.classList.toggle('dark');
+      const isDark = body.classList.contains('dark');
+      modeToggleBtn.textContent = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+      modeToggleBtn.setAttribute('aria-pressed', isDark);
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // Initial render
+    renderTasks();
+  </script>
+</body>
+</html>
